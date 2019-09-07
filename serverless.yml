@@ -1,0 +1,31 @@
+service:
+  name: ipuresults
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+custom:
+  env: ${file(./vars.env.js):getEnvVars}
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: ap-south-1
+  iamManagedPolicies:
+    - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+  environment:
+    DB_HOST: ${self:custom.env.DB_HOST}
+    DB_USER: ${self:custom.env.DB_USER}
+    DB_PASSWORD: ${self:custom.env.DB_PASSWORD}
+    BUCKET_NAME: ${self:custom.env.BUCKET_NAME}
+
+functions:
+  downloadPdf:
+    handler: handler.downloadPdf
+    # events:
+    #   - schedule: rate(1 minute)
+  fetchLinks:
+    handler: handler.fetchLinks
+    # events:
+    #   - schedule: rate(1 hour)
