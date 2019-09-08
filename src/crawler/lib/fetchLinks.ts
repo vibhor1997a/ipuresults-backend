@@ -2,19 +2,26 @@ import * as request from 'request';
 import * as cheerio from 'cheerio';
 import * as url from 'url';
 import { Context, APIGatewayProxyResult } from 'aws-lambda';
-import { InternalServerError, APIResponse } from '../../helpers/response';
-import { connectToDB } from '../../config/db';
+import { InternalServerError, APIResponse } from '../../../helpers/response';
+import { connectToDB } from '../../../config/db';
 import { Connection, Model } from 'mongoose';
-import { ResultFile } from '../../interfaces/resultFile';
+import { ResultFile } from '../../../interfaces/resultFile';
 
 let conn: Connection;
 
+/**
+ * Fetch all the links and try to bulk insert into db
+ * @param event 
+ * @param context 
+ */
 export async function fetchLinks(event, context: Context): Promise<APIGatewayProxyResult> {
     context.callbackWaitsForEmptyEventLoop = false;
     try {
         conn = await connectToDB(conn);
         let ResultFile: Model<ResultFile> = conn.model('ResultFile');
+        console.log('fetching links')
         let resultFiles = await getResultFiles(process.env.START_URL, ResultFile);
+        console.log('fetched links')
         try {
             await ResultFile.insertMany(resultFiles, { ordered: false });
         }
@@ -29,6 +36,12 @@ export async function fetchLinks(event, context: Context): Promise<APIGatewayPro
     }
 }
 
+/**
+ * Recursively fetch links from current page => next page and so on
+ * @param reqLink 
+ * @param ResultFile 
+ * @param resultFiles 
+ */
 function getResultFiles(reqLink, ResultFile: Model<ResultFile>, resultFiles?: ResultFile[]): Promise<ResultFile[]> {
     resultFiles = resultFiles || [];
     return new Promise((res, rej) => {

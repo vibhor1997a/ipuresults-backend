@@ -1,3 +1,3 @@
 import 'source-map-support/register';
-export { fetchLinks } from './src/crawler/fetchLinks';
-export { downloadPdf } from './src/crawler/downloadPdf';
+export { fetchLinks, downloadPdf } from './src/crawler/';
+export { convertToTxt } from './src/parser/';

@@ -9,4 +9,5 @@ export interface ResultFile extends Document {
     downloadedAt: Date;
     convertedAt: Date;
     parsedAt: Date;
+    toSkip: boolean;
 }

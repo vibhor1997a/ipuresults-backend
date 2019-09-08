@@ -24,5 +24,9 @@ export const resultFileSchema = new Schema({
     },
     downloadedAt: Date,
     convertedAt: Date,
-    parsedAt: Date
+    parsedAt: Date,
+    toSkip: {
+        type: Boolean,
+        default: false
+    }
 });

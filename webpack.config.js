@@ -1,6 +1,6 @@
 const path = require('path');
 const slsw = require('serverless-webpack');
-const CopyPlugin = require('copy-webpack-plugin');
+// const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   mode: slsw.lib.webpack.isLocal ? 'development' : 'production',
@@ -9,11 +9,11 @@ module.exports = {
   resolve: {
     extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
   },
-  plugins: [
-    new CopyPlugin([
-      { from: 'bin', to: 'bin' },
-    ]),
-  ],
+  // plugins: [
+  //   new CopyPlugin([
+  //     { from: 'bin', to: 'bin' },
+  //   ]),
+  // ],
   output: {
     libraryTarget: 'commonjs',
     path: path.join(__dirname, '.webpack'),

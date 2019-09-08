@@ -1,0 +1,1 @@
+export { convertToTxt } from "./lib/convertToTxt";
