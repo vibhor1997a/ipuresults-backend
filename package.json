@@ -11,6 +11,7 @@
     "bson": "^4.0.2",
     "cheerio": "^1.0.0-rc.3",
     "dotenv": "^8.1.0",
+    "moment": "^2.24.0",
     "mongoose": "^5.6.13",
     "request": "^2.88.0",
     "source-map-support": "^0.5.10"
@@ -26,7 +27,7 @@
     "serverless-offline": "^5.10.1",
     "serverless-webpack": "^5.2.0",
     "ts-loader": "^5.3.3",
-    "typescript": "^3.2.4",
+    "typescript": "^3.6.3",
     "webpack": "^4.29.0"
   },
   "author": "vibhor agrawal <vibhor349a@rediffmail.com>",

@@ -12,7 +12,7 @@ provider:
   name: aws
   runtime: nodejs10.x
   region: ap-south-1
-  timeout: 15
+  timeout: 20
   iamManagedPolicies:
     - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
   environment:

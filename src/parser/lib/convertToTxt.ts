@@ -9,13 +9,14 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execPromise = promisify(exec);
-// const readFilePromise = promisify(fs.readFile);
-// const writeFilePromise = promisify(fs.writeFile);
-// const chmodPromise = promisify(fs.chmod);
-
 const s3Client = new S3();
 let conn: Connection;
 
+/**
+ * Lambda function which converts the pdf files to corresponding txt
+ * @param event 
+ * @param context 
+ */
 export async function convertToTxt(event, context: Context): Promise<APIGatewayProxyResult> {
     context.callbackWaitsForEmptyEventLoop = false;
     process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
@@ -27,7 +28,7 @@ export async function convertToTxt(event, context: Context): Promise<APIGatewayP
         const ResultFile: Model<ResultFile> = conn.model('ResultFile');
         let resultFile = await ResultFile.findOne({ isDownloaded: true, isConverted: false, toSkip: false });
         if (!resultFile) {
-            return APIResponse({ message: 'no upload needed' });
+            return APIResponse({ message: 'All files converted' });
         }
         let resultFileIdStr = resultFile._id.toHexString();
 
@@ -61,6 +62,10 @@ export async function convertToTxt(event, context: Context): Promise<APIGatewayP
     }
 }
 
+/**
+ * fetch the pdf from S3
+ * @param fileKey 
+ */
 function getPdfFile(fileKey) {
     return new Promise((res, rej) => {
         let writeStream = fs.createWriteStream(`/tmp/${fileKey}.pdf`)
@@ -78,12 +83,12 @@ function getPdfFile(fileKey) {
     });
 }
 
+/**
+ * pdf=>txt using poppler's pdftotext
+ * @param fileKey 
+ */
 async function convertPdfFile(fileKey): Promise<void> {
     try {
-        // const pdfToTextBinary = await readFilePromise('/opt/pdftotext/bin/pdftotext');
-        // await writeFilePromise('/tmp/pdftotext', pdfToTextBinary);
-        // await chmodPromise('/tmp/pdftotext', 755);
-        // await execPromise(`/tmp/pdftotext -raw /tmp/${fileKey}.pdf /tmp/${fileKey}.txt`)
         await execPromise(`pdftotext -raw /tmp/${fileKey}.pdf /tmp/${fileKey}.txt`);
         return;
     }
@@ -93,6 +98,10 @@ async function convertPdfFile(fileKey): Promise<void> {
     }
 }
 
+/**
+ * Upload the created txt to S3
+ * @param fileKey 
+ */
 function uploadTxtFile(fileKey) {
     let fileReadStream = fs.createReadStream(`/tmp/${fileKey}.txt`);
     return s3Client.putObject({
