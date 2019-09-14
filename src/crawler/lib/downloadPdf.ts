@@ -1,6 +1,6 @@
 import * as http from 'http';
 import { Context, APIGatewayProxyResult } from 'aws-lambda';
-import { InternalServerError, APIResponse } from '../../../helpers/response';
+import { InternalServerError, APIResponse } from '../../helpers/response';
 import { S3, AWSError } from 'aws-sdk';
 import { PromiseResult } from 'aws-sdk/lib/request';
 import { Connection, Model } from 'mongoose';

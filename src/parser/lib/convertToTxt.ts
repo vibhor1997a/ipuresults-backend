@@ -1,5 +1,5 @@
 import { Context, APIGatewayProxyResult } from 'aws-lambda';
-import { InternalServerError, APIResponse } from '../../../helpers/response';
+import { InternalServerError, APIResponse } from '../../helpers/response';
 import { S3 } from 'aws-sdk';
 import { Connection, Model } from 'mongoose';
 import { connectToDB } from '../../config/db';

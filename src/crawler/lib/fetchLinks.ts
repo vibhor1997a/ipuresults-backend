@@ -2,7 +2,7 @@ import * as request from 'request';
 import * as cheerio from 'cheerio';
 import * as url from 'url';
 import { Context, APIGatewayProxyResult } from 'aws-lambda';
-import { InternalServerError, APIResponse } from '../../../helpers/response';
+import { InternalServerError, APIResponse } from '../../helpers/response';
 import { connectToDB } from '../../config/db';
 import { Connection, Model } from 'mongoose';
 import { ResultFile } from '../../interfaces/resultFile';
