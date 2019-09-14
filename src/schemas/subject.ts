@@ -1,15 +1,7 @@
 import { Schema } from "mongoose";
 
-export const studentSchema = new Schema({
-    rollNumber: {
-        type: String,
-        required: true
-    },
-    studentId: {
-        type: String,
-        required: true
-    },
-    name: {
+export const subjectSchema = new Schema({
+    paperId: {
         type: String,
         required: true
     },
@@ -17,24 +9,50 @@ export const studentSchema = new Schema({
         type: String,
         required: true
     },
-    institutionCode: {
+    paperCode: {
         type: String,
         required: true
     },
-    programmeCode: {
+    name: {
         type: String,
         required: true
     },
-    batch: {
+    credits: {
+        type: Number,
+        required: true
+    },
+    type: {
         type: String,
         required: true
     },
-    takenFrom: {
-        type: Schema.Types.ObjectId,
+    mode: {
+        type: String,
+        required: true
+    },
+    kind: {
+        type: String,
+        required: true
+    },
+    major: Number,
+    minor: Number,
+    exam: {
+        type: String,
         required: true
     },
     createdAt: {
         type: Date,
         default: new Date
+    },
+    passMarks: {
+        type: Number,
+        required: true
+    },
+    maxMarks: {
+        type: Number,
+        required: true
+    },
+    takenFrom: {
+        type: Schema.Types.ObjectId,
+        required: true
     }
 });

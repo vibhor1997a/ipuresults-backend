@@ -1,7 +1,7 @@
 import { Document, Types } from "mongoose";
 
 export interface Programme {
-    code: number;
+    code: string;
     name: string;
 }
 

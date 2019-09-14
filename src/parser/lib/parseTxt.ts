@@ -4,8 +4,8 @@ import { S3 } from 'aws-sdk';
 import { Connection, Model } from 'mongoose';
 import { connectToDB } from '../../config/db';
 import { ResultFile } from '../../interfaces/resultFile';
-import * as moment from 'moment';
 import { parseContent } from './parser';
+import { prepareForInsert, insertIntoDB } from './insert';
 
 let conn: Connection;
 
@@ -23,6 +23,7 @@ export async function parseTxt(event, context: Context): Promise<APIGatewayProxy
             isDownloaded: true,
             isConverted: true,
             toSkip: false,
+            isParsed: false,
             // skipping these
             linkText: /^((?!bams).)*$/i
         });
@@ -31,13 +32,19 @@ export async function parseTxt(event, context: Context): Promise<APIGatewayProxy
         }
         let resultFileIdStr = resultFile._id.toHexString();
         const fileContent = await getTxt(resultFileIdStr);
-        const pages = parseContent(fileContent);
-        const s3Client = new S3();
-        const req = await s3Client.putObject({
-            Bucket: process.env.Bucket_NAME,
-            Key: `jsons/result-${resultFileIdStr}.json`,
-            Body: JSON.stringify(pages, undefined, 4)
-        }).promise();
+
+        try {
+            const { pages, subjects, institutions, programmes } = parseContent(fileContent);
+            const prepared = prepareForInsert({ conn, subjectsMap: subjects, pages, takenFrom: resultFile._id, institutionsMap: institutions, programmesMap: programmes });
+            await insertIntoDB(prepared);
+        }
+        catch (err) {
+            resultFile.toSkip = true;
+            resultFile = await resultFile.save();
+            console.error(err);
+        }
+        resultFile.isParsed = true;
+        resultFile = await resultFile.save();
         return APIResponse({ message: 'result parsed' });
     }
     catch (err) {

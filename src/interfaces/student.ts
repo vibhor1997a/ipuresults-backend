@@ -1,13 +1,13 @@
 import { Document, Types } from "mongoose";
 
 export interface Student {
-    rollNumber: number;
-    studentId: number;
+    rollNumber: string;
+    studentId: string;
     name: string;
-    schemeId: number;
-    institutionCode: number;
-    programmeCode: number;
-    batch: number;
+    schemeId: string;
+    institutionCode: string;
+    programmeCode: string;
+    batch: string;
 }
 
 export interface StudentModel extends Document, Student {

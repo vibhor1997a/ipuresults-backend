@@ -1,19 +1,41 @@
 import * as moment from 'moment';
-import { ResultPageType, ParsedResultPage, ParsedSchemePage, SemYear, Exam, ResultSet, SubjectResult, Marks, SubjectMap, Subject } from '../../interfaces/result';
+import { ResultPageType, ParsedResultPage, ParsedSchemePage, SemYear, Exam, ResultSet, SubjectResult, Marks, SubjectMap, ParsedPage, InstitutionMap, ProgrammeMap } from '../../interfaces/result';
 import { Institution } from '../../interfaces/institution';
 import { RegexpStore } from './RegexpStore';
 import { Student } from '../../interfaces/student';
+import { Subject } from '../../interfaces/subject';
 
-export function parsePage(content: string) {
+const subjects: SubjectMap = {};
+const institutions: InstitutionMap = {};
+const programmes: ProgrammeMap = {};
+
+export function parsePage(content: string): ParsedPage {
     let resultPageType = getResultPageType(content);
-    const subjects: SubjectMap = {};
     if (resultPageType == 'result') {
-        return parseResultPage(content, subjects);
+        const { institution, programme, results, students, pageNumber } = parseResultPage(content);
+        institutions[institution.code] = institution;
+        programmes[programme.code] = programme
+        return { results, students, pageNumber };
     }
     else if (resultPageType == 'scheme') {
-        const parsedSchemePage = parseSchemePage(content);
-        Object.assign(subjects, parsedSchemePage.subjects);
-        return parsedSchemePage;
+        const { institution, programme, subjects: parsedSubjects, pageNumber } = parseSchemePage(content);
+        const schemeIds = Object.keys(parsedSubjects);
+        for (let schemeId of schemeIds) {
+            if (!subjects[schemeId]) {
+                subjects[schemeId] = {};
+            }
+            let paperIds = Object.keys(parsedSubjects[schemeId]);
+            for (let paperId of paperIds) {
+                if (!subjects[schemeId][paperId]) {
+                    subjects[schemeId][paperId] = parsedSubjects[schemeId][paperId];
+                }
+            }
+        }
+        institutions[institution.code] = institution;
+        programmes[programme.code] = programme
+        return {
+            results: [], students: [], pageNumber
+        };
     }
 }
 
@@ -29,20 +51,18 @@ export function getResultPageType(pageStr: string): ResultPageType {
     }
 }
 
-export function parseContent(content: string) {
+export function parseContent(content: string): { pages: ParsedPage[], subjects: SubjectMap, institutions: InstitutionMap, programmes: ProgrammeMap } {
     const resultPagesArr = content.split(/\(SCHEME OF EXAMINATIONS\)|RESULT TABULATION SHEET/).filter(s => s);
-    const pages = [];
+    const pages: ParsedPage[] = [];
     for (let resultPage of resultPagesArr) {
         const parsedPage = parsePage(resultPage);
-        if (parsedPage) {
-            pages.push(parsedPage);
-        }
+        pages.push(parsedPage);
     }
-    return pages;
+    return { pages, subjects, institutions, programmes };
 }
 
 
-function parseResultPage(content: string, subjects: SubjectMap): ParsedResultPage {
+function parseResultPage(content: string): ParsedResultPage {
     const declaredDate = parseDeclaredDate(content);
     const preparedDate = parsePreparedDate(content);
     const institution = parseInstitution(content);
@@ -53,9 +73,9 @@ function parseResultPage(content: string, subjects: SubjectMap): ParsedResultPag
     const students: Student[] = [];
     const results: ResultSet[] = [];
     while (studentsMatch = RegexpStore.students.exec(content)) {
-        const rollNumber = Number(studentsMatch[1]);
-        const schemeId = Number(studentsMatch[4]);
-        const studentId = Number(studentsMatch[3])
+        const rollNumber = studentsMatch[1];
+        const schemeId = studentsMatch[4];
+        const studentId = studentsMatch[3]
         const student: Student = {
             batch,
             institutionCode: institution.code,
@@ -65,7 +85,7 @@ function parseResultPage(content: string, subjects: SubjectMap): ParsedResultPag
             schemeId,
             studentId
         }
-        const subjects: SubjectResult[] = [];
+        const subjectResults: SubjectResult[] = [];
         const marksMatch = studentsMatch[5];
         const marksSplitArr = marksMatch.trim().split(/\r?\n/);
         for (let i = 0; i < marksSplitArr.length; i += 3) {
@@ -79,9 +99,9 @@ function parseResultPage(content: string, subjects: SubjectMap): ParsedResultPag
                 major,
                 minor,
                 totalMarks,
-                subject: subjects[schemeId][paperId]
+                paperId
             };
-            subjects.push(subjectResult);
+            subjectResults.push(subjectResult);
         }
 
         const result: ResultSet = {
@@ -93,7 +113,8 @@ function parseResultPage(content: string, subjects: SubjectMap): ParsedResultPag
             semYear,
             studentId,
             totalCredits: Number(studentsMatch[6]),
-            subjects
+            subjects: subjectResults,
+            pageNumber
         }
         students.push(student);
         results.push(result);
@@ -149,7 +170,7 @@ function parsePreparedDate(content: string): Date {
 function parseInstitution(content: string): Institution {
     const institutionMatch = content.match(RegexpStore.institution);
     return {
-        code: Number(institutionMatch[1]),
+        code: institutionMatch[1],
         name: institutionMatch[2]
     };
 }
@@ -157,11 +178,11 @@ function parseInstitution(content: string): Institution {
 function parseSchemeProgramme(content: string) {
     const programmeMatch = content.match(RegexpStore.programme.scheme);
     return {
-        schemeId: Number(programmeMatch[3]),
+        schemeId: programmeMatch[3],
         semYear: parseSemYear(programmeMatch[4]),
         programme: {
             name: programmeMatch[2],
-            code: Number(programmeMatch[1])
+            code: programmeMatch[1]
         }
     };
 }
@@ -171,11 +192,11 @@ function parsePageNumber(content: string): number {
     return Number(pageNumberMatch[1]);
 }
 
-function parseSubjects(content: string, schemeId: number): SubjectMap {
+function parseSubjects(content: string, schemeId: string): SubjectMap {
     let subjectsMatch;
     const subjects = {};
     while (subjectsMatch = RegexpStore.subjects.exec(content)) {
-        const paperId = Number(subjectsMatch[1]);
+        const paperId = subjectsMatch[1];
         const subject: Subject = {
             paperId,
             paperCode: subjectsMatch[2],
@@ -191,6 +212,15 @@ function parseSubjects(content: string, schemeId: number): SubjectMap {
             passMarks: Number(subjectsMatch[12]),
             schemeId
         };
+        if (isNaN(subject.minor)) {
+            subject.minor = undefined;
+        }
+        if (isNaN(subject.major)) {
+            subject.major = undefined;
+        }
+        if (!subjects[schemeId]) {
+            subjects[schemeId] = {};
+        }
         subjects[schemeId][paperId] = subject;
     }
     return subjects;
@@ -201,10 +231,10 @@ function parseResultProgramme(content: string) {
     return {
         programme: {
             name: programmeMatch[2],
-            code: Number(programmeMatch[1])
+            code: programmeMatch[1]
         },
         semYear: parseSemYear(programmeMatch[3]),
-        batch: Number(programmeMatch[4]),
+        batch: programmeMatch[4],
         examination: parseExam(programmeMatch[5])
     };
 }
@@ -225,7 +255,7 @@ function parseExam(examString: string): Exam {
 function parsePaperId(paperIdStr: string) {
     const paperIdMatch = paperIdStr.match(RegexpStore.paperId);
     return {
-        paperId: Number(paperIdMatch[1]),
+        paperId: paperIdMatch[1],
         credits: Number(paperIdMatch[2])
     };
 }

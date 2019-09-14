@@ -4,6 +4,7 @@ import { institutionSchema } from '../schemas/institution';
 import { programmeSchema } from '../schemas/programme';
 import { studentSchema } from '../schemas/student';
 import { resultSetSchema } from '../schemas/resultSet';
+import { subjectSchema } from '../schemas/subject';
 
 export async function connectToDB(conn: mongoose.Connection) {
     if (!conn) {
@@ -20,6 +21,7 @@ export async function connectToDB(conn: mongoose.Connection) {
         conn.model('Programme', programmeSchema);
         conn.model('Student', studentSchema);
         conn.model('ResultSet', resultSetSchema);
+        conn.model('Subject', subjectSchema);
     }
     return conn;
 }

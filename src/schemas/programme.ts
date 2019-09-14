@@ -2,7 +2,7 @@ import { Schema } from "mongoose";
 
 export const programmeSchema = new Schema({
     code: {
-        type: Number,
+        type: String,
         required: true
     },
     name: {

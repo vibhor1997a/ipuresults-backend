@@ -1,7 +1,8 @@
-import { Institution } from "./institution";
-import { Programme } from "./programme";
-import { Student } from "./student";
-import { Types } from "mongoose";
+import { Institution, InstitutionModel } from "./institution";
+import { Programme, ProgrammeModel } from "./programme";
+import { Student, StudentModel } from "./student";
+import { Types, Document, Model } from "mongoose";
+import { Subject, SubjectModel } from "./subject";
 
 export type ResultPageType = 'result' | 'scheme' | 'invalid';
 export type SpecialMarks = 'A' | 'CS' | 'D' | 'C' | 'RL' | 'AP';
@@ -12,35 +13,27 @@ export interface Marks {
     specialString: SpecialMarks | undefined;
 }
 
-export interface Subject {
-    schemeId: number;
-    paperId: number;
-    paperCode: string;
-    name: string
-    credits: number;
-    type: string;
-    mode: string;
-    kind: string;
-    major: number;
-    minor: number;
-    maxMarks: number;
-    passMarks: number;
-    exam: string;
-}
-
 export interface SemYear {
     type: 'sem' | 'year';
     num: number;
 };
 
 export interface SubjectMap {
-    [schemeId: number]: {
-        [paperId: number]: Subject
+    [schemeId: string]: {
+        [paperId: string]: Subject
     }
 }
 
+export interface InstitutionMap {
+    [code: string]: Institution;
+}
+
+export interface ProgrammeMap {
+    [code: string]: Programme;
+}
+
 export interface SubjectResult {
-    subject: Subject;
+    paperId: string;
     credits: number;
     grade: string;
     totalMarks: Marks;
@@ -60,25 +53,28 @@ export interface ResultSet {
     declaredDate: Date;
     preparedDate: Date;
     semYear: SemYear;
-    rollNumber: Number;
-    schemeId: Number;
-    studentId: Number;
+    rollNumber: string;
+    schemeId: string;
+    studentId: string;
     exam: Exam;
+    pageNumber: number;
 }
 
 export interface SubjectResultModel extends SubjectResult, Types.Subdocument { }
 
-export interface ResultSetModel extends ResultSet, Types.Subdocument {
+export interface ResultSetModel extends ResultSet, Document {
     subjects: Types.DocumentArray<SubjectResultModel>
     createdAt: Date;
     takenFrom: Types.ObjectId
+    institutionCode: string;
+    programmeCode: string;
 }
 
 export interface ParsedSchemePage {
     institution: Institution;
     programme: Programme;
     semYear: SemYear;
-    schemeId: number;
+    schemeId: string;
     subjects: SubjectMap;
     pageNumber: number;
 }
@@ -90,4 +86,34 @@ export interface ParsedResultPage {
     results: ResultSet[];
     students: Student[];
     pageNumber: number;
+}
+
+export interface ParsedPage {
+    // institution: Institution;
+    // programme: Programme;
+    // subjects: SubjectMap;
+    pageNumber: number;
+    results: ResultSet[];
+    students: Student[];
+}
+
+export interface PreparedData {
+    institutions: InstitutionModel[];
+    programmes: ProgrammeModel[];
+    results: ResultSetModel[];
+    students: StudentModel[];
+    subjects: SubjectModel[];
+}
+
+export interface PreparedModels {
+    InstitutionModel: Model<InstitutionModel>;
+    ProgrammeModel: Model<ProgrammeModel>;
+    ResultSetModel: Model<ResultSetModel>;
+    StudentModel: Model<StudentModel>;
+    SubjectModel: Model<SubjectModel>;
+}
+
+export interface PreparedResult {
+    data: PreparedData;
+    models: PreparedModels;
 }

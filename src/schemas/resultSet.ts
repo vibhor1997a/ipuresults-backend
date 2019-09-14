@@ -1,65 +1,5 @@
 import { Schema } from "mongoose";
 
-const subjectSchema = new Schema({
-    paperId: {
-        type: Number,
-        required: true
-    },
-    schemeId: {
-        type: Number,
-        required: true
-    },
-    paperCode: {
-        type: String,
-        required: true
-    },
-    name: {
-        type: String,
-        required: true
-    },
-    credits: {
-        type: Number,
-        required: true
-    },
-    type: {
-        type: String,
-        required: true
-    },
-    mode: {
-        type: String,
-        required: true
-    },
-    kind: {
-        type: String,
-        required: true
-    },
-    major: {
-        type: Number,
-        required: true
-    },
-    minor: {
-        type: Number,
-        required: true
-    },
-    totalMarks: {
-        type: Number,
-        required: true
-    },
-    exam: {
-        type: String,
-        required: true
-    },
-    takenFrom: {
-        type: Schema.Types.ObjectId,
-        required: true
-    },
-    createdAt: {
-        type: Date,
-        default: new Date
-    }
-});
-
-
 const examSchema = new Schema({
     regularReappear: {
         type: String,
@@ -82,8 +22,8 @@ const marksSchema = new Schema({
 });
 
 const subjectResultSchema = new Schema({
-    subject: {
-        type: subjectSchema,
+    paperId: {
+        type: String,
         required: true
     },
     credits: {
@@ -95,6 +35,10 @@ const subjectResultSchema = new Schema({
         required: true
     },
     major: {
+        type: marksSchema,
+        required: true
+    },
+    minor: {
         type: marksSchema,
         required: true
     },
@@ -126,7 +70,7 @@ export const resultSetSchema = new Schema({
         default: new Date
     },
     rollNumber: {
-        type: Number,
+        type: String,
         required: true
     },
     totalCredits: {
@@ -142,11 +86,11 @@ export const resultSetSchema = new Schema({
         required: true
     },
     schemeId: {
-        type: Number,
+        type: String,
         required: true
     },
     studentId: {
-        type: Number,
+        type: String,
         required: true
     },
     semYear: {
@@ -162,11 +106,11 @@ export const resultSetSchema = new Schema({
         required: true
     },
     programmeCode: {
-        type: Number,
+        type: String,
         required: true
     },
     institutionCode: {
-        type: Number,
+        type: String,
         required: true
     }
 });

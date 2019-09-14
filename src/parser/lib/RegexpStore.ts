@@ -2,7 +2,8 @@
  * We will put all of the parsing regexps' here
  */
 export const RegexpStore = {
-    subjects: /\d+ (\d+) (\S+) (.+) (\d+) (\S+) (\S+) (\S+) (\S+) (\d+) (\d+) (\d+) (\d+)/g,
+    subjects: /\d+ (\d+) ?(\S+) ?(.+) ?(\d+) ?(\S+) ?(\S+) ?(\S+) ?(\S+) ?(\S+) ?(\S+) ?(\S+) (\S+)/g,
+    // subjects: /\d+ (\d+) (\S+) (.+) (\d+) (\S+) (\S+) (\S+) (\S+) (\d+) (\d+) (\d+) (\d+)/g,
     institution: /institution.+:\s?(\d+) .+:\s?(.+)/i,
     pageNumber: /page no\.:\s?(\d+)/i,
     students: /(\d{11,11})\s(.+)\s(?:\S+ (\d+))\s(?:\S+ (\d+))\s+((?:\S+?\(.+\)\s+\S+\s+\S+\s+\S+\*?(?:\(.+\))?\s+)+)(\S+)/g,
