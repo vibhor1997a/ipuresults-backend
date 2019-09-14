@@ -1,7 +1,7 @@
 import { Institution } from "./institution";
 import { Programme } from "./programme";
-import { Subject } from "./subject";
 import { Student } from "./student";
+import { Types } from "mongoose";
 
 export type ResultPageType = 'result' | 'scheme' | 'invalid';
 export type SpecialMarks = 'A' | 'CS' | 'D' | 'C' | 'RL' | 'AP';
@@ -9,7 +9,23 @@ export type SpecialMarks = 'A' | 'CS' | 'D' | 'C' | 'RL' | 'AP';
 export interface Marks {
     score: number;
     isSpecial: boolean;
-    specialString: SpecialMarks;
+    specialString: SpecialMarks | undefined;
+}
+
+export interface Subject {
+    schemeId: number;
+    paperId: number;
+    paperCode: string;
+    name: string
+    credits: number;
+    type: string;
+    mode: string;
+    kind: string;
+    major: number;
+    minor: number;
+    maxMarks: number;
+    passMarks: number;
+    exam: string;
 }
 
 export interface SemYear {
@@ -17,8 +33,14 @@ export interface SemYear {
     num: number;
 };
 
+export interface SubjectMap {
+    [schemeId: number]: {
+        [paperId: number]: Subject
+    }
+}
+
 export interface SubjectResult {
-    paperId: number;
+    subject: Subject;
     credits: number;
     grade: string;
     totalMarks: Marks;
@@ -44,12 +66,20 @@ export interface ResultSet {
     exam: Exam;
 }
 
+export interface SubjectResultModel extends SubjectResult, Types.Subdocument { }
+
+export interface ResultSetModel extends ResultSet, Types.Subdocument {
+    subjects: Types.DocumentArray<SubjectResultModel>
+    createdAt: Date;
+    takenFrom: Types.ObjectId
+}
+
 export interface ParsedSchemePage {
     institution: Institution;
     programme: Programme;
     semYear: SemYear;
     schemeId: number;
-    subjects: Subject[];
+    subjects: SubjectMap;
     pageNumber: number;
 }
 

@@ -1,3 +1,5 @@
+import { Document, Types } from "mongoose";
+
 export interface Student {
     rollNumber: number;
     studentId: number;
@@ -6,4 +8,9 @@ export interface Student {
     institutionCode: number;
     programmeCode: number;
     batch: number;
+}
+
+export interface StudentModel extends Document, Student {
+    createdAt: Date;
+    takenFrom: Types.ObjectId
 }

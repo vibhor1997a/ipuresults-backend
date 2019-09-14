@@ -1,14 +1,19 @@
 import * as moment from 'moment';
-import { ResultPageType, ParsedResultPage, ParsedSchemePage, SemYear, Exam, ResultSet } from '../../../interfaces/result';
-import { Institution } from '../../../interfaces/institution';
+import { ResultPageType, ParsedResultPage, ParsedSchemePage, SemYear, Exam, ResultSet, SubjectResult, Marks, SubjectMap, Subject } from '../../interfaces/result';
+import { Institution } from '../../interfaces/institution';
 import { RegexpStore } from './RegexpStore';
-import { Subject } from '../../../interfaces/subject';
-import { Student } from '../../../interfaces/student';
+import { Student } from '../../interfaces/student';
 
 export function parsePage(content: string) {
     let resultPageType = getResultPageType(content);
-    if (resultPageType !== 'invalid') {
-
+    const subjects: SubjectMap = {};
+    if (resultPageType == 'result') {
+        return parseResultPage(content, subjects);
+    }
+    else if (resultPageType == 'scheme') {
+        const parsedSchemePage = parseSchemePage(content);
+        Object.assign(subjects, parsedSchemePage.subjects);
+        return parsedSchemePage;
     }
 }
 
@@ -24,41 +29,82 @@ export function getResultPageType(pageStr: string): ResultPageType {
     }
 }
 
-function parseContent(content: string) {
+export function parseContent(content: string) {
     const resultPagesArr = content.split(/\(SCHEME OF EXAMINATIONS\)|RESULT TABULATION SHEET/).filter(s => s);
+    const pages = [];
     for (let resultPage of resultPagesArr) {
-        parsePage(resultPage);
+        const parsedPage = parsePage(resultPage);
+        if (parsedPage) {
+            pages.push(parsedPage);
+        }
     }
+    return pages;
 }
 
 
-function parseResultPage(content: string): ParsedResultPage {
+function parseResultPage(content: string, subjects: SubjectMap): ParsedResultPage {
     const declaredDate = parseDeclaredDate(content);
     const preparedDate = parsePreparedDate(content);
     const institution = parseInstitution(content);
     const pageNumber = parsePageNumber(content);
     const { batch, examination, semYear, programme } = parseResultProgramme(content);
 
-    let studentsMatch;
-    const students = [];
-    const results = [];
+    let studentsMatch: RegExpMatchArray;
+    const students: Student[] = [];
+    const results: ResultSet[] = [];
     while (studentsMatch = RegexpStore.students.exec(content)) {
+        const rollNumber = Number(studentsMatch[1]);
+        const schemeId = Number(studentsMatch[4]);
+        const studentId = Number(studentsMatch[3])
         const student: Student = {
             batch,
             institutionCode: institution.code,
             programmeCode: programme.code,
             name: studentsMatch[2],
-            rollNumber: Number(studentsMatch[1]),
-            schemeId: Number(studentsMatch[4]),
-            studentId: Number(studentsMatch[3])
+            rollNumber,
+            schemeId,
+            studentId
         }
+        const subjects: SubjectResult[] = [];
+        const marksMatch = studentsMatch[5];
+        const marksSplitArr = marksMatch.trim().split(/\r?\n/);
+        for (let i = 0; i < marksSplitArr.length; i += 3) {
+            let [paperIdStr, minorMajorMarksStr, totalMarksStr] = [marksSplitArr[i], marksSplitArr[i + 1], marksSplitArr[i + 2]];
+            const { credits, paperId } = parsePaperId(paperIdStr);
+            const { major, minor } = parseMajorMinorMarks(minorMajorMarksStr);
+            const { grade, totalMarks } = parseTotalMarks(totalMarksStr);
+            const subjectResult: SubjectResult = {
+                credits,
+                grade,
+                major,
+                minor,
+                totalMarks,
+                subject: subjects[schemeId][paperId]
+            };
+            subjects.push(subjectResult);
+        }
+
         const result: ResultSet = {
-            declaredDate
+            declaredDate,
+            preparedDate,
+            rollNumber,
+            schemeId,
+            exam: examination,
+            semYear,
+            studentId,
+            totalCredits: Number(studentsMatch[6]),
+            subjects
         }
+        students.push(student);
+        results.push(result);
     }
     return {
         students,
-        results
+        results,
+        institution,
+        pageNumber,
+        programme,
+        semYear
     }
 }
 
@@ -115,7 +161,7 @@ function parseSchemeProgramme(content: string) {
         semYear: parseSemYear(programmeMatch[4]),
         programme: {
             name: programmeMatch[2],
-            code: programmeMatch[1]
+            code: Number(programmeMatch[1])
         }
     };
 }
@@ -125,13 +171,14 @@ function parsePageNumber(content: string): number {
     return Number(pageNumberMatch[1]);
 }
 
-function parseSubjects(content: string, schemeId: number): Subject[] {
+function parseSubjects(content: string, schemeId: number): SubjectMap {
     let subjectsMatch;
-    const subjects = [];
+    const subjects = {};
     while (subjectsMatch = RegexpStore.subjects.exec(content)) {
+        const paperId = Number(subjectsMatch[1]);
         const subject: Subject = {
-            paperId: Number(subjectsMatch[1]),
-            code: subjectsMatch[2],
+            paperId,
+            paperCode: subjectsMatch[2],
             name: subjectsMatch[3],
             credits: subjectsMatch[4],
             type: subjectsMatch[5],
@@ -144,7 +191,7 @@ function parseSubjects(content: string, schemeId: number): Subject[] {
             passMarks: Number(subjectsMatch[12]),
             schemeId
         };
-        subjects.push(subject);
+        subjects[schemeId][paperId] = subject;
     }
     return subjects;
 }
@@ -172,18 +219,52 @@ function parseExam(examString: string): Exam {
         date,
         regularReappear,
         special
+    };
+}
+
+function parsePaperId(paperIdStr: string) {
+    const paperIdMatch = paperIdStr.match(RegexpStore.paperId);
+    return {
+        paperId: Number(paperIdMatch[1]),
+        credits: Number(paperIdMatch[2])
+    };
+}
+
+function parseMajorMinorMarks(majorMinorStr: string) {
+    const majorMinorMatch = majorMinorStr.match(RegexpStore.majorMinor);
+    return {
+        major: parseMarksString(majorMinorMatch[2]),
+        minor: parseMarksString(majorMinorMatch[1])
+    };
+}
+
+function parseTotalMarks(totalMarksStr: string) {
+    const totalMarksMatch = totalMarksStr.match(RegexpStore.totalMarks);
+    if (totalMarksMatch) {
+        return {
+            totalMarks: parseMarksString(totalMarksMatch[1]),
+            grade: totalMarksMatch[2]
+        };
+    }
+    else {
+        return {
+            totalMarks: parseMarksString(totalMarksStr)
+        };
     }
 }
 
-interface ParseSingleResultInput {
-    content: string;
-    batch: number;
-    institutionCode: number;
-    programmeCode: number
-    declaredDate: Date,
-    preparedDate: Date
-}
-
-function parseSingleResult({ content, batch, institutionCode, programmeCode, declaredDate, preparedDate }): ParseSingleResultInput {
-
+function parseMarksString(marksStr: string): Marks {
+    let score = Number(marksStr.trim());
+    let isSpecial = false;
+    let specialString;
+    if (isNaN(score)) {
+        isSpecial = true;
+        score = 0;
+        specialString = marksStr;
+    }
+    return {
+        score,
+        isSpecial,
+        specialString
+    };
 }

@@ -2,12 +2,10 @@ import { Context, APIGatewayProxyResult } from 'aws-lambda';
 import { InternalServerError, APIResponse } from '../../../helpers/response';
 import { S3 } from 'aws-sdk';
 import { Connection, Model } from 'mongoose';
-import { connectToDB } from '../../../config/db';
-import { ResultFile } from '../../../interfaces/resultFile';
+import { connectToDB } from '../../config/db';
+import { ResultFile } from '../../interfaces/resultFile';
 import * as moment from 'moment';
-import { SemYear, ParsedResultPage, ParsedSchemePage } from '../../../interfaces/result';
-import { Institution } from '../../../interfaces/institution';
-import { RegexpStore } from './RegexpStore';
+import { parseContent } from './parser';
 
 let conn: Connection;
 
@@ -21,12 +19,26 @@ export async function parseTxt(event, context: Context): Promise<APIGatewayProxy
     try {
         conn = await connectToDB(conn);
         const ResultFile: Model<ResultFile> = conn.model('ResultFile');
-        let resultFile = await ResultFile.findOne({ isDownloaded: true, isConverted: true, toSkip: false });
+        let resultFile = await ResultFile.findOne({
+            isDownloaded: true,
+            isConverted: true,
+            toSkip: false,
+            // skipping these
+            linkText: /^((?!bams).)*$/i
+        });
         if (!resultFile) {
             return APIResponse({ message: 'no upload needed' });
         }
         let resultFileIdStr = resultFile._id.toHexString();
         const fileContent = await getTxt(resultFileIdStr);
+        const pages = parseContent(fileContent);
+        const s3Client = new S3();
+        const req = await s3Client.putObject({
+            Bucket: process.env.Bucket_NAME,
+            Key: `jsons/result-${resultFileIdStr}.json`,
+            Body: JSON.stringify(pages, undefined, 4)
+        }).promise();
+        return APIResponse({ message: 'result parsed' });
     }
     catch (err) {
         console.error(err);

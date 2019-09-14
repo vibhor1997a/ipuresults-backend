@@ -1,5 +1,9 @@
 import * as mongoose from 'mongoose';
 import { resultFileSchema } from '../schemas/resultFile';
+import { institutionSchema } from '../schemas/institution';
+import { programmeSchema } from '../schemas/programme';
+import { studentSchema } from '../schemas/student';
+import { resultSetSchema } from '../schemas/resultSet';
 
 export async function connectToDB(conn: mongoose.Connection) {
     if (!conn) {
@@ -12,6 +16,10 @@ export async function connectToDB(conn: mongoose.Connection) {
         });
         console.log('Connected to Db!');
         conn.model('ResultFile', resultFileSchema);
+        conn.model('Institution', institutionSchema);
+        conn.model('Programme', programmeSchema);
+        conn.model('Student', studentSchema);
+        conn.model('ResultSet', resultSetSchema);
     }
     return conn;
 }

@@ -4,8 +4,8 @@ import { InternalServerError, APIResponse } from '../../../helpers/response';
 import { S3, AWSError } from 'aws-sdk';
 import { PromiseResult } from 'aws-sdk/lib/request';
 import { Connection, Model } from 'mongoose';
-import { connectToDB } from '../../../config/db';
-import { ResultFile } from '../../../interfaces/resultFile';
+import { connectToDB } from '../../config/db';
+import { ResultFile } from '../../interfaces/resultFile';
 
 let conn: Connection;
 

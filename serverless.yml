@@ -35,3 +35,7 @@ functions:
     handler: handler.convertToTxt
     events:
       - schedule: rate(1 minute)
+  parseTxt:
+    handler: handler.parseTxt
+    events:
+      - schedule: rate(1 minute)
