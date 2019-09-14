@@ -23,14 +23,14 @@ provider:
     START_URL: ${self:custom.env.START_URL}
 
 functions:
+  fetchLinks:
+    handler: handler.fetchLinks
+    # events:
+    #   - schedule: rate(1 hour)
   downloadPdf:
     handler: handler.downloadPdf
     events:
       - schedule: rate(1 minute)
-  fetchLinks:
-    handler: handler.fetchLinks
-    events:
-      - schedule: rate(1 hour)
   convertToTxt:
     handler: handler.convertToTxt
     events:

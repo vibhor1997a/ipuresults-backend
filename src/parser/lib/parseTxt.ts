@@ -6,6 +6,7 @@ import { connectToDB } from '../../config/db';
 import { ResultFile } from '../../interfaces/resultFile';
 import { parseContent } from './parser';
 import { prepareForInsert, insertIntoDB } from './insert';
+const s3Client = new S3();
 
 let conn: Connection;
 
@@ -58,11 +59,10 @@ export async function parseTxt(event, context: Context): Promise<APIGatewayProxy
  * @param fileKey 
  */
 async function getTxt(fileKey): Promise<string> {
-    const s3Client = new S3();
     try {
         const s3Response = await s3Client.getObject({
             Key: `txts/${fileKey}`,
-            Bucket: process.env.Bucket_NAME
+            Bucket: process.env.BUCKET_NAME
         }).promise();
         return s3Response.Body.toString();
     }
