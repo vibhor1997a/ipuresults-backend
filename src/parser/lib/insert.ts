@@ -1,5 +1,5 @@
 import { ParsedPage, ResultSetModel, PreparedResult, SubjectMap, InstitutionMap, ProgrammeMap } from "../../interfaces/result";
-import { Connection, Model, Types, model } from "mongoose";
+import { Connection, Model, Types, model, Document } from "mongoose";
 import { InstitutionModel } from "../../interfaces/institution";
 import { ProgrammeModel } from "../../interfaces/programme";
 import { StudentModel } from "../../interfaces/student";
@@ -79,45 +79,85 @@ export function prepareForInsert({ pages, conn, takenFrom, subjectsMap, institut
     };
 }
 
-export async function insertIntoDB(prepared: PreparedResult) {
+export async function insertAllData(prepared: PreparedResult) {
     const { models, data } = prepared;
     let { InstitutionModel, StudentModel, ResultSetModel, ProgrammeModel, SubjectModel } = models;
     let { institutions, programmes, results, students, subjects } = data;
     let toThrow;
     try {
-        institutions = await InstitutionModel.insertMany(institutions);
-    }
-    catch (err) {
-        console.error(err);
-    }
-    try {
-        programmes = await ProgrammeModel.insertMany(programmes);
-    }
-    catch (err) {
-        console.error(err);
-    }
-    try {
-        subjects = await SubjectModel.insertMany(subjects);
-    }
-    catch (err) {
-        console.error(err);
-    }
-    try {
-        students = await StudentModel.insertMany(students);
+        console.log('Inserting institutions');
+        institutions = await bulkInsertAll(institutions, InstitutionModel);
+        console.log('Inserted institutions');
     }
     catch (err) {
         toThrow = err;
     }
     try {
-        results = await ResultSetModel.insertMany(results);
+        console.log('Inserting programmes');
+        programmes = await bulkInsertAll(programmes, ProgrammeModel);
+        console.log('Inserted programmes');
     }
     catch (err) {
         toThrow = err;
     }
-    if (!toThrow) {
-        return;
+    try {
+        console.log('Inserting subjects');
+        subjects = await bulkInsertAll(subjects, SubjectModel);
+        console.log('Inserted subjects');
     }
-    else {
-        throw toThrow;
+    catch (err) {
+        toThrow = err;
     }
+    try {
+        console.log('Inserting students');
+        students = await bulkInsertAll(students, StudentModel);
+        console.log('Inserted students');
+    }
+    catch (err) {
+        toThrow = err;
+    }
+    try {
+        console.log('Inserting results');
+        results = await bulkInsertAll(results, ResultSetModel);
+        console.log('Inserted results');
+    }
+    catch (err) {
+        toThrow = err;
+    }
+}
+
+
+async function bulkInsertAll<T extends Document>(docs: T[], Model: Model<T>): Promise<T[]> {
+    let toInsert = [];
+    let inserted: T[] = [];
+    for (let i = 0; i < docs.length; i++) {
+        toInsert.push(docs[i]);
+        const isLastItem = i === docs.length - 1;
+        if (i % 500 === 0 || isLastItem) {
+            try {
+                inserted.concat(await bulkInsert(toInsert, Model));
+            }
+            catch (err) {
+                console.error(err);
+            }
+            toInsert = [];
+        }
+    }
+    return inserted;
+}
+
+function bulkInsert<T extends Document>(docs: T[], Model: Model<T>): Promise<T[]> {
+    return new Promise((res, rej) => {
+        Model.collection.insertMany(docs, { ordered: false }, function (err) {
+            if (err) {
+                if (err.hasOwnProperty('writeErrors')) {
+                    //@ts-ignore
+                    if (err.writeErrors.some(error => error.code != 11000)) {
+                        rej(err);
+                    }
+                }
+            }
+            res(docs);
+        });
+    });
 }

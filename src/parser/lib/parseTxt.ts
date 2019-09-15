@@ -5,7 +5,7 @@ import { Connection, Model } from 'mongoose';
 import { connectToDB } from '../../config/db';
 import { ResultFile } from '../../interfaces/resultFile';
 import { parseContent } from './parser';
-import { prepareForInsert, insertIntoDB } from './insert';
+import { prepareForInsert, insertAllData } from './insert';
 const s3Client = new S3();
 
 let conn: Connection;
@@ -37,7 +37,7 @@ export async function parseTxt(event, context: Context): Promise<APIGatewayProxy
         try {
             const { pages, subjects, institutions, programmes } = parseContent(fileContent);
             const prepared = prepareForInsert({ conn, subjectsMap: subjects, pages, takenFrom: resultFile._id, institutionsMap: institutions, programmesMap: programmes });
-            await insertIntoDB(prepared);
+            await insertAllData(prepared);
         }
         catch (err) {
             resultFile.toSkip = true;
