@@ -21,6 +21,8 @@ provider:
     DB_PASSWORD: ${self:custom.env.DB_PASSWORD}
     BUCKET_NAME: ${self:custom.env.BUCKET_NAME}
     START_URL: ${self:custom.env.START_URL}
+    DB_PORT: ${self:custom.env.DB_PORT}
+    DB_NAME: ${self:custom.env.DB_NAME}
 
 functions:
   fetchLinks:
