@@ -33,7 +33,7 @@ export async function parseTxt(event, context: Context): Promise<APIGatewayProxy
         }
         let resultFileIdStr = resultFile._id.toHexString();
         const fileContent = await getTxt(resultFileIdStr);
-
+        console.log(`parsing result ${resultFileIdStr}`);
         try {
             const { pages, subjects, institutions, programmes } = parseContent(fileContent);
             const prepared = prepareForInsert({ conn, subjectsMap: subjects, pages, takenFrom: resultFile._id, institutionsMap: institutions, programmesMap: programmes });
