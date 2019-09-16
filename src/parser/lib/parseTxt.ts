@@ -42,7 +42,7 @@ export async function parseTxt(event, context: Context): Promise<APIGatewayProxy
         catch (err) {
             resultFile.toSkip = true;
             resultFile = await resultFile.save();
-            console.error(err);
+            throw err;
         }
         resultFile.isParsed = true;
         resultFile = await resultFile.save();

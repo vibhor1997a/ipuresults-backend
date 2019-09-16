@@ -12,6 +12,7 @@ provider:
   name: aws
   runtime: nodejs10.x
   region: ap-south-1
+  memorySize: 1728
   timeout: 60
   iamManagedPolicies:
     - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
@@ -39,5 +40,9 @@ functions:
       - schedule: rate(1 minute)
   parseTxt:
     handler: handler.parseTxt
+    events:
+      - schedule: rate(1 minute)
+  executeScripts:
+    handler: handler.executeScripts
     events:
       - schedule: rate(1 minute)
