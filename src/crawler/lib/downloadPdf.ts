@@ -17,11 +17,12 @@ let conn: Connection;
 export async function downloadPdf(event, context: Context): Promise<APIGatewayProxyResult> {
     context.callbackWaitsForEmptyEventLoop = false;
     try {
+        const fileId = event.fileId;
         conn = await connectToDB(conn);
         const ResultFile: Model<ResultFile> = conn.model('ResultFile');
-        let resultFile = await ResultFile.findOne({ isDownloaded: false, toSkip: false });
+        let resultFile = await ResultFile.findById(fileId);
         if (!resultFile) {
-            return APIResponse({ message: 'no upload needed' });
+            return APIResponse({ message: 'not found', statusCode: 404 });
         }
         let requestURL = encodeURI(resultFile.link);
         let resultFileIdStr = resultFile._id.toHexString();

@@ -18,18 +18,12 @@ let conn: Connection;
 export async function parseTxt(event, context: Context): Promise<APIGatewayProxyResult> {
     context.callbackWaitsForEmptyEventLoop = false;
     try {
+        const fileId = event.fileId;
         conn = await connectToDB(conn);
         const ResultFile: Model<ResultFile> = conn.model('ResultFile');
-        let resultFile = await ResultFile.findOne({
-            isDownloaded: true,
-            isConverted: true,
-            toSkip: false,
-            isParsed: false,
-            // skipping these
-            linkText: /^((?!bams).)*$/i
-        });
+        let resultFile = await ResultFile.findById(fileId);
         if (!resultFile) {
-            return APIResponse({ message: 'no upload needed' });
+            return APIResponse({ message: 'not found', statusCode: 404 });
         }
         let resultFileIdStr = resultFile._id.toHexString();
         const fileContent = await getTxt(resultFileIdStr);

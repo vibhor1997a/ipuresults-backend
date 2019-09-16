@@ -42,6 +42,7 @@ export async function executeScripts(event, context: Context): Promise<APIGatewa
         await invokeLambda('downloadPdf', toDownload);
         await invokeLambda('convertPdf', toConvert);
         await invokeLambda('parseTxt', toParse);
+        return APIResponse({ data: 'started scripts execution successfully' });
     }
     catch (err) {
         console.error(err);
@@ -51,9 +52,11 @@ export async function executeScripts(event, context: Context): Promise<APIGatewa
 
 
 async function invokeLambda(fname: string, files: ResultFile[]): Promise<PromiseResult<Lambda.InvocationResponse, AWSError>[]> {
+    const arn = `${process.env.ARN_PREFIX}-${fname}`;
     const invokePromises: Promise<PromiseResult<Lambda.InvocationResponse, AWSError>>[] = [];
     for (const file of files) {
-        const invokePromise = lambda.invoke({ InvocationType: 'Event', FunctionName: fname, Payload: JSON.stringify({ fileId: file._id.toHexString() }) }).promise();
+        let payload = JSON.stringify({ fileId: file._id.toHexString() });
+        const invokePromise = lambda.invoke({ InvocationType: 'Event', FunctionName: arn, Payload: payload }).promise();
         invokePromises.push(invokePromise);
     }
     return Promise.all(invokePromises);

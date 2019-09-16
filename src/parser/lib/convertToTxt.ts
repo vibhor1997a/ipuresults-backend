@@ -20,15 +20,15 @@ let conn: Connection;
 export async function convertToTxt(event, context: Context): Promise<APIGatewayProxyResult> {
     context.callbackWaitsForEmptyEventLoop = false;
     process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
-    console.log(process.env.LAMBDA_TASK_ROOT);
     process.env.PATH = process.env.PATH + ':' + '/opt/pdftotext/bin';
     process.env.LD_LIBRARY_PATH = process.env.LD_LIBRARY_PATH + ':' + '/opt/pdftotext/lib';
     try {
+        const fileId = event.fileId;
         conn = await connectToDB(conn);
         const ResultFile: Model<ResultFile> = conn.model('ResultFile');
-        let resultFile = await ResultFile.findOne({ isDownloaded: true, isConverted: false, toSkip: false });
+        let resultFile = await ResultFile.findById(fileId);
         if (!resultFile) {
-            return APIResponse({ message: 'All files converted' });
+            return APIResponse({ message: 'not found', statusCode: 404 });
         }
         let resultFileIdStr = resultFile._id.toHexString();
 

@@ -16,6 +16,7 @@ provider:
   timeout: 60
   iamManagedPolicies:
     - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+    - 'arn:aws:iam::aws:policy/AWSLambdaFullAccess'
   environment:
     DB_HOST: ${self:custom.env.DB_HOST}
     DB_USER: ${self:custom.env.DB_USER}
@@ -24,6 +25,10 @@ provider:
     START_URL: ${self:custom.env.START_URL}
     DB_PORT: ${self:custom.env.DB_PORT}
     DB_NAME: ${self:custom.env.DB_NAME}
+    DOWNLOADS_PER_MINUTE: ${self:custom.env.DOWNLOADS_PER_MINUTE}
+    CONVERTS_PER_MINUTE: ${self:custom.env.CONVERTS_PER_MINUTE}
+    PARSE_PER_MINUTE: ${self:custom.env.PARSE_PER_MINUTE}
+    ARN_PREFIX: ${self:custom.env.ARN_PREFIX}
 
 functions:
   fetchLinks:
@@ -32,16 +37,10 @@ functions:
       - schedule: rate(10 minutes)
   downloadPdf:
     handler: handler.downloadPdf
-    events:
-      - schedule: rate(1 minute)
   convertToTxt:
     handler: handler.convertToTxt
-    events:
-      - schedule: rate(1 minute)
   parseTxt:
     handler: handler.parseTxt
-    events:
-      - schedule: rate(1 minute)
   executeScripts:
     handler: handler.executeScripts
     events:
