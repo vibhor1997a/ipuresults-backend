@@ -35,9 +35,7 @@ export async function executeScripts(event, context: Context): Promise<APIGatewa
             isDownloaded: true,
             isConverted: true,
             toSkip: false,
-            isParsed: false,
-            // skipping these
-            linkText: /^((?!bams).)*$/i
+            isParsed: false
         }).limit(parsePerMinute);
         await invokeLambda('downloadPdf', toDownload);
         await invokeLambda('convertPdf', toConvert);
@@ -56,6 +54,7 @@ async function invokeLambda(fname: string, files: ResultFile[]): Promise<Promise
     const invokePromises: Promise<PromiseResult<Lambda.InvocationResponse, AWSError>>[] = [];
     for (const file of files) {
         let payload = JSON.stringify({ fileId: file._id.toHexString() });
+        console.log(`Invoking ${fname} with fileId ${file._id}`);
         const invokePromise = lambda.invoke({ InvocationType: 'Event', FunctionName: arn, Payload: payload }).promise();
         invokePromises.push(invokePromise);
     }
