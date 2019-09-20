@@ -12,8 +12,6 @@ provider:
   name: aws
   runtime: nodejs10.x
   region: ap-south-1
-  memorySize: 1728
-  timeout: 60
   iamManagedPolicies:
     - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
     - 'arn:aws:iam::aws:policy/AWSLambdaFullAccess'
@@ -37,10 +35,16 @@ functions:
       - schedule: rate(10 minutes)
   downloadPdf:
     handler: handler.downloadPdf
+    memorySize: 1728
+    timeout: 30
   convertToTxt:
     handler: handler.convertToTxt
+    memorySize: 1728
+    timeout: 30
   parseTxt:
     handler: handler.parseTxt
+    memorySize: 1728
+    timeout: 60
   executeScripts:
     handler: handler.executeScripts
     events:
