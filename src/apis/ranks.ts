@@ -43,7 +43,7 @@ export async function getRanks(event: APIGatewayEvent, context: Context): Promis
         }
         else if (rankType != 'university') {
             return APIResponse({
-                message: 'Invalid rankType',
+                message: 'Invalid type',
                 statusCode: 400
             });
         }
