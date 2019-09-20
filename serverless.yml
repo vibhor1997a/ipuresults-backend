@@ -45,3 +45,15 @@ functions:
     handler: handler.executeScripts
     events:
       - schedule: rate(1 minute)
+  getResult:
+    handler: handler.getResult
+    events:
+      - http:
+          path: results/{rollNumber}
+          method: GET
+  getRanks:
+    handler: handler.getRanks
+    events:
+      - http:
+          path: ranks
+          method: GET

@@ -117,3 +117,44 @@ export interface PreparedResult {
     data: PreparedData;
     models: PreparedModels;
 }
+
+interface ResponseMarks {
+    max: number;
+    earned: number | string;
+}
+
+export interface ResponseSubjectResult {
+    name: string;
+    minor: ResponseMarks;
+    major: ResponseMarks;
+    total: ResponseMarks;
+    isPassed: boolean;
+    credits: number
+}
+
+export interface ResponseSemesterResult {
+    fileId: string;
+    semYear: SemYear;
+    exam: Exam;
+    creditsEarned: number;
+    declared: Date,
+    prepared: Date,
+    subjects: ResponseSubjectResult[];
+    percentage?: number;
+    creditPercentage?: number;
+    totalMarks?: number;
+    maxMarks?: number;
+}
+
+export interface ResponseResult {
+    rollNumber: string;
+    name: string;
+    programme: Programme,
+    institution: Institution,
+    batch: string;
+    results: ResponseSemesterResult[];
+    aggregatePercentage: number;
+    aggregateCreditPercentage: number;
+    totalCreditsEarned: number;
+    maxCredits: number;
+}
