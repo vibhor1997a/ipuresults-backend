@@ -38,7 +38,7 @@ export async function executeScripts(event, context: Context): Promise<APIGatewa
             isParsed: false
         }).limit(parsePerMinute);
         await invokeLambda('downloadPdf', toDownload);
-        await invokeLambda('convertPdf', toConvert);
+        await invokeLambda('convertToTxt', toConvert)
         await invokeLambda('parseTxt', toParse);
         return APIResponse({ data: 'started scripts execution successfully' });
     }
