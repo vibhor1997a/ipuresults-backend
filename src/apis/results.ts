@@ -125,8 +125,8 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
                 semResult.maxMarks = maxSemMarks;
                 semResult.totalMarks = totalSemMarks;
                 semResult.creditPercentage = Math.round((totalSemCreditMarks / maxSemCreditMarks) * 10000) / 100;
-                results.push(semResult)
             }
+            results.push(semResult);
         }
         const data: ResponseResult = {
             rollNumber: student.rollNumber,
