@@ -13,19 +13,28 @@ interface APIResponseFactoryOptions {
     isBase64Encoded?: boolean;
 }
 
-export function APIResponse(options: APIResponseFactoryOptions): APIGatewayProxyResult {
+export function APIResponse(options?: APIResponseFactoryOptions): APIGatewayProxyResult {
     let body: string = ''
+    options = options || {};
+    let defaultStatusCode = 204;
     if (options.data || options.message) {
+        defaultStatusCode = 200;
         body = JSON.stringify({
             data: options.data,
             message: options.message
         });
     }
+    let headers = {
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Headers': '*',
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': 'https://www.ipuresults.xyz'
+    };
     return {
-        statusCode: options.statusCode || 200,
+        statusCode: options.statusCode || defaultStatusCode,
         body,
         isBase64Encoded: options.isBase64Encoded,
-        headers: options.headers,
+        headers: Object.assign(headers, options.headers),
         multiValueHeaders: options.multiValueHeaders
     };
 }
