@@ -144,6 +144,8 @@ export interface ResponseSemesterResult {
     creditPercentage?: number;
     totalMarks?: number;
     maxMarks?: number;
+    collegeRank?: number;
+    universityRank?: number;
 }
 
 export interface ResponseResult {

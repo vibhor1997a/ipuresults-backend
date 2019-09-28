@@ -33,9 +33,9 @@ export async function getRanks(event: APIGatewayEvent, context: Context): Promis
         let query: any = {
             takenFrom: new ObjectId(takenFrom)
         };
-        let sortFactor: any = { universityRank: -1 };
+        let sortFactor: any = { universityRank: 1 };
         if (rankType == 'institution') {
-            sortFactor = { collegeRank: -1 };
+            sortFactor = { collegeRank: 1 };
             const InstitutionModel: Model<InstitutionModel> = conn.model('Institution');
             if (institutionCode) {
                 const institution = await InstitutionModel.findOne({ code: institutionCode });

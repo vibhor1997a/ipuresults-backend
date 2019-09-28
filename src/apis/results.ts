@@ -8,6 +8,7 @@ import { InstitutionModel } from "../interfaces/institution";
 import { ProgrammeModel } from "../interfaces/programme";
 import { SubjectModel } from "../interfaces/subject";
 import { ObjectId } from "bson";
+import { SemesterRank } from "../interfaces/semesterRank";
 
 let conn: Connection;
 
@@ -25,6 +26,7 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
         const SubjectModel: Model<SubjectModel> = conn.model('Subject');
         const ProgrammeModel: Model<ProgrammeModel> = conn.model('Programme');
         const InstitutionModel: Model<InstitutionModel> = conn.model('Institution');
+        const SemesterRankModel: Model<SemesterRank> = conn.model('SemesterRank');
         const rollNumber = event.pathParameters['rollNumber'];
         const rollNumberMatchArr = rollNumber.match(/^\d{3,3}(\d{3,3})(\d{3,3})\d{2,2}$/);
         if (!rollNumberMatchArr) {
@@ -65,8 +67,7 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
 
         let results: ResponseSemesterResult[] = [];
         let totalMarks = 0, maxMarks = 0, totalCredits = 0, maxCredits = 0, totalCreditMarks = 0, maxCreditMarks = 0;
-        // let institutionRanksMap = {};
-        // let universityRankMap = {};
+        let rankPromises: Promise<SemesterRank>[] = [];
         for (let resultSet of resultSets) {
             const isRegular = resultSet.exam.regularReappear == 'regular' && !resultSet.exam.special;
             const semResult: ResponseSemesterResult = {
@@ -85,6 +86,7 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
                 subjects: [],
                 fileId: resultSet.takenFrom.toHexString()
             };
+            rankPromises.push(getRank(SemesterRankModel, rollNumber, resultSet.takenFrom));
             let totalSemMarks = 0, maxSemMarks = 0, totalSemCreditMarks = 0, maxSemCreditMarks = 0, maxSemCredits = 0;
             for (let subjectResult of resultSet.subjects) {
                 let subject = paperIdSubjectMap[subjectResult.paperId];
@@ -128,6 +130,23 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
             }
             results.push(semResult);
         }
+
+        let ranks = await Promise.all(rankPromises);
+        let ranksMap = {};
+        for (let rank of ranks) {
+            if (rank) {
+                ranksMap[rank.takenFrom.toHexString()] = {
+                    collegeRank: rank.collegeRank,
+                    universityRank: rank.universityRank
+                };
+            }
+        }
+
+        for(let result of results){
+            result.collegeRank = ranksMap[result.fileId] && ranksMap[result.fileId].collegeRank
+            result.universityRank = ranksMap[result.fileId] && ranksMap[result.fileId].universityRank
+        }
+
         const data: ResponseResult = {
             rollNumber: student.rollNumber,
             programme: {
@@ -156,6 +175,6 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
     }
 }
 
-async function getSemesterRank(){
-    
+async function getRank(SemesterRankModel: Model<SemesterRank>, rollNumber: string, takenFrom: ObjectId) {
+    return SemesterRankModel.findOne({ rollNumber, takenFrom });
 }
