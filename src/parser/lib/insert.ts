@@ -4,6 +4,7 @@ import { InstitutionModel } from "../../interfaces/institution";
 import { ProgrammeModel } from "../../interfaces/programme";
 import { StudentModel } from "../../interfaces/student";
 import { SubjectModel } from "../../interfaces/subject";
+import { bulkInsertAll } from "../../helpers/bulk";
 
 interface PrepareInput {
     pages: ParsedPage[];
@@ -124,40 +125,4 @@ export async function insertAllData(prepared: PreparedResult) {
     catch (err) {
         toThrow = err;
     }
-}
-
-
-async function bulkInsertAll<T extends Document>(docs: T[], Model: Model<T>): Promise<T[]> {
-    let toInsert = [];
-    let inserted: T[] = [];
-    for (let i = 0; i < docs.length; i++) {
-        toInsert.push(docs[i]);
-        const isLastItem = i === docs.length - 1;
-        if (i % 500 === 0 || isLastItem) {
-            try {
-                inserted.concat(await bulkInsert(toInsert, Model));
-            }
-            catch (err) {
-                console.error(err);
-            }
-            toInsert = [];
-        }
-    }
-    return inserted;
-}
-
-function bulkInsert<T extends Document>(docs: T[], Model: Model<T>): Promise<T[]> {
-    return new Promise((res, rej) => {
-        Model.collection.insertMany(docs, { ordered: false }, function (err) {
-            if (err) {
-                if (err.hasOwnProperty('writeErrors')) {
-                    //@ts-ignore
-                    if (err.writeErrors.some(error => error.code != 11000)) {
-                        rej(err);
-                    }
-                }
-            }
-            res(docs);
-        });
-    });
 }

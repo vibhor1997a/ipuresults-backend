@@ -2,9 +2,9 @@ import { APIGatewayEvent, Context, APIGatewayProxyResult } from "aws-lambda";
 import { InternalServerError, APIResponse } from "../helpers/response";
 import { Connection, Model } from "mongoose";
 import { connectToDB } from "../config/db";
-import { getSemesterScores } from "./getSemesterScores";
 import { ObjectId } from "bson";
 import { InstitutionModel } from "../interfaces/institution";
+import { SemesterRank } from "../interfaces/semesterRank";
 
 let conn: Connection;
 
@@ -17,11 +17,25 @@ export async function getRanks(event: APIGatewayEvent, context: Context): Promis
     context.callbackWaitsForEmptyEventLoop = true;
     try {
         conn = await connectToDB(conn);
-        const rankType: 'institution' | 'university' = event.queryStringParameters['type'] as any;
+        const rankType: 'institution' | 'university' = event.pathParameters['type'] as any;
         const takenFrom: string = event.queryStringParameters['fileId'];
         const institutionCode: string = event.queryStringParameters['institutionCode'];
+        const limit: number = Number(event.queryStringParameters['limit']) || 20;
+        if (limit > 50) {
+            return APIResponse({
+                message: 'limit can\'t exceed 50',
+                statusCode: 400
+            });
+        }
+        const offset: number = Number(event.queryStringParameters['offset']) || 0;
         let institutionCodes: string[];
+        const SemesterRankModel: Model<SemesterRank> = conn.model('SemesterRank');
+        let query: any = {
+            takenFrom: new ObjectId(takenFrom)
+        };
+        let sortFactor: any = { universityRank: -1 };
         if (rankType == 'institution') {
+            sortFactor = { collegeRank: -1 };
             const InstitutionModel: Model<InstitutionModel> = conn.model('Institution');
             if (institutionCode) {
                 const institution = await InstitutionModel.findOne({ code: institutionCode });
@@ -33,6 +47,9 @@ export async function getRanks(event: APIGatewayEvent, context: Context): Promis
                 }
                 const institutions = await InstitutionModel.find({ name: institution.name });
                 institutionCodes = institutions.map(institution => institution.code);
+                query['institution.code'] = {
+                    '$in': institutionCodes
+                }
             }
             else {
                 return APIResponse({
@@ -53,21 +70,19 @@ export async function getRanks(event: APIGatewayEvent, context: Context): Promis
                 statusCode: 400
             });
         }
-        let semesterScores = await getSemesterScores({ conn, institutionCodes, takenFrom: new ObjectId(takenFrom) });
-        const rankList = [];
-        let rank = 1, prevMarks;
-        for (let i = 0; i < semesterScores.length; i++) {
-            if (i != 0 && prevMarks != semesterScores[i].marks) {
-                rank++;
-            }
-            prevMarks = semesterScores[i].marks;
-            rankList.push({
-                rollNumber: semesterScores[i].rollNumber,
-                name: semesterScores[i].name,
-                rank,
-                marks: semesterScores[i].marks
-            });
-        }
+        const semesterRanks = await SemesterRankModel.find(query).sort(sortFactor).skip(offset).limit(limit);
+        const rankList = semesterRanks.map(semesterRank => ({
+            id: semesterRank._id,
+            name: semesterRank.name,
+            rollNumber: semesterRank.rollNumber,
+            marks: semesterRank.marks,
+            institution: {
+                name: semesterRank.institution.name,
+                code: semesterRank.institution.code,
+            },
+            collegeRank: semesterRank.collegeRank,
+            universityRank: semesterRank.universityRank
+        }));
         return APIResponse({
             data: rankList
         });

@@ -156,40 +156,6 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
     }
 }
 
-// async function getRank({ takenFrom, institutionCodes, ResultSetModel, rollNumber }: { takenFrom: ObjectId; institutionCodes: number[]; rollNumber: string; ResultSetModel: Model<ResultSetModel>; }): Promise<number> {
-//     const scores = await ResultSetModel.aggregate([
-//         {
-//             '$match': {
-//                 'takenFrom': takenFrom,
-//                 'exam.regularReappear': 'regular',
-//                 'institutionCode': institutionCodes
-//             }
-//         }, {
-//             '$unwind': {
-//                 'path': '$subjects'
-//             }
-//         }, {
-//             '$group': {
-//                 '_id': '$rollNumber',
-//                 'marks': {
-//                     '$sum': '$subjects.totalMarks.score'
-//                 }
-//             }
-//         },
-//         {
-//             '$sort': {
-//                 'marks': -1
-//             }
-//         }
-//     ]);
-//     let rank = 1, prevScore = scores[0] && scores[0].marks;
-//     for (let score of scores) {
-//         if (score.marks != prevScore) {
-//             rank++;
-//         }
-//         if (score._id == rollNumber) {
-//             return rank;
-//         }
-//     }
-//     return rank;
-// }
+async function getSemesterRank(){
+    
+}

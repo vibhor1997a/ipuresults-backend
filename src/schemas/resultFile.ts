@@ -28,5 +28,9 @@ export const resultFileSchema = new Schema({
     toSkip: {
         type: Boolean,
         default: false
+    },
+    isRanked: {
+        type: Boolean,
+        default: false
     }
 });

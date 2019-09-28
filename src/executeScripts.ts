@@ -17,29 +17,46 @@ let conn: Connection;
 export async function executeScripts(event, context: Context): Promise<APIGatewayProxyResult> {
     context.callbackWaitsForEmptyEventLoop = false;
     try {
-        const downloadsPerMinute = Number(process.env.DOWNLOADS_PER_MINUTE);
-        const convertsPerMinute = Number(process.env.CONVERTS_PER_MINUTE);
+        const downloadPerMinute = Number(process.env.DOWNLOADS_PER_MINUTE);
+        const convertPerMinute = Number(process.env.CONVERTS_PER_MINUTE);
         const parsePerMinute = Number(process.env.PARSE_PER_MINUTE)
+        const rankPerMinute = Number(process.env.RANK_PER_MINUTE)
         conn = await connectToDB(conn);
         const ResultFile: Model<ResultFile> = conn.model('ResultFile');
-        const toDownload = await ResultFile.find({
-            isDownloaded: false,
-            toSkip: false
-        }).limit(downloadsPerMinute);
-        const toConvert = await ResultFile.find({
-            isDownloaded: true,
-            isConverted: false,
-            toSkip: false
-        }).limit(convertsPerMinute);
-        const toParse = await ResultFile.find({
-            isDownloaded: true,
-            isConverted: true,
-            toSkip: false,
-            isParsed: false
-        }).limit(parsePerMinute);
-        await invokeLambda('downloadPdf', toDownload);
-        await invokeLambda('convertToTxt', toConvert)
-        await invokeLambda('parseTxt', toParse);
+        if (downloadPerMinute) {
+            const toDownload = await ResultFile.find({
+                isDownloaded: false,
+                toSkip: false
+            }).limit(downloadPerMinute);
+            await invokeLambda('downloadPdf', toDownload);
+        }
+        if (convertPerMinute) {
+            const toConvert = await ResultFile.find({
+                isDownloaded: true,
+                isConverted: false,
+                toSkip: false
+            }).limit(convertPerMinute);
+            await invokeLambda('convertToTxt', toConvert)
+        }
+        if (parsePerMinute) {
+            const toParse = await ResultFile.find({
+                isDownloaded: true,
+                isConverted: true,
+                toSkip: false,
+                isParsed: false
+            }).limit(parsePerMinute);
+            await invokeLambda('parseTxt', toParse);
+        }
+        if (rankPerMinute) {
+            const toRank = await ResultFile.find({
+                isDownloaded: true,
+                isConverted: true,
+                toSkip: false,
+                isParsed: true,
+                isRanked: false
+            }).limit(rankPerMinute);
+            await invokeLambda('rankResultSets', toRank);
+        }
         return APIResponse({ data: 'started scripts execution successfully' });
     }
     catch (err) {

@@ -13,6 +13,10 @@ interface APIResponseFactoryOptions {
     isBase64Encoded?: boolean;
 }
 
+/**
+ * Prepare response for API gateway
+ * @param options 
+ */
 export function APIResponse(options?: APIResponseFactoryOptions): APIGatewayProxyResult {
     let body: string = ''
     options = options || {};

@@ -1,4 +1,5 @@
 import 'source-map-support/register';
+export { rankResultSets } from './src/parser';
 export { options } from './src/apis/options';
 export { getRanks } from './src/apis/ranks';
 export { getResult } from './src/apis/results';

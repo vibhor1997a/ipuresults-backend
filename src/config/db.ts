@@ -5,8 +5,12 @@ import { programmeSchema } from '../schemas/programme';
 import { studentSchema } from '../schemas/student';
 import { resultSetSchema } from '../schemas/resultSet';
 import { subjectSchema } from '../schemas/subject';
-import { semesterScoreSchema } from '../schemas/semesterScore';
+import { semesterRankSchema } from '../schemas/semesterRank';
 
+/**
+ * Make connection to db if required
+ * @param conn 
+ */
 export async function connectToDB(conn: mongoose.Connection) {
     if (!conn) {
         const dbURI = `mongodb://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}?authSource=admin`;
@@ -23,7 +27,7 @@ export async function connectToDB(conn: mongoose.Connection) {
         conn.model('Student', studentSchema);
         conn.model('ResultSet', resultSetSchema);
         conn.model('Subject', subjectSchema);
-        conn.model('SemesterScore', semesterScoreSchema);
+        conn.model('SemesterRank', semesterRankSchema);
     }
     return conn;
 }

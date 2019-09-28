@@ -10,4 +10,5 @@ export interface ResultFile extends Document {
     convertedAt: Date;
     parsedAt: Date;
     toSkip: boolean;
+    isRanked: boolean;
 }

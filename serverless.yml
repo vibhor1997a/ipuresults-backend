@@ -26,13 +26,14 @@ provider:
     DOWNLOADS_PER_MINUTE: ${self:custom.env.DOWNLOADS_PER_MINUTE}
     CONVERTS_PER_MINUTE: ${self:custom.env.CONVERTS_PER_MINUTE}
     PARSE_PER_MINUTE: ${self:custom.env.PARSE_PER_MINUTE}
+    RANK_PER_MINUTE: ${self:custom.env.RANK_PER_MINUTE}
     ARN_PREFIX: ${self:custom.env.ARN_PREFIX}
 
 functions:
   fetchLinks:
     handler: handler.fetchLinks
     events:
-      - schedule: rate(10 minutes)
+      - schedule: rate(5 minutes)
   downloadPdf:
     handler: handler.downloadPdf
     memorySize: 1728
@@ -59,8 +60,11 @@ functions:
     handler: handler.getRanks
     events:
       - http:
-          path: ranks
+          path: ranks/{type}
           method: GET
+  rankResultSets:
+    handler: handler.rankResultSets
+    timeout: 30
   options:
     handler: handler.options
     events:
