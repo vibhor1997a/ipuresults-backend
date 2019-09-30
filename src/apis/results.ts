@@ -9,6 +9,7 @@ import { ProgrammeModel } from "../interfaces/programme";
 import { SubjectModel } from "../interfaces/subject";
 import { ObjectId } from "bson";
 import { SemesterRank } from "../interfaces/semesterRank";
+import * as crypto from 'crypto';
 
 let conn: Connection;
 
@@ -68,7 +69,16 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
         let results: ResponseSemesterResult[] = [];
         let totalMarks = 0, maxMarks = 0, totalCredits = 0, maxCredits = 0, totalCreditMarks = 0, maxCreditMarks = 0;
         let rankPromises: Promise<SemesterRank>[] = [];
+        let hashMapResultSets: {
+            [hash: string]: ResultSetModel
+        } = {};
+
         for (let resultSet of resultSets) {
+            let hash = crypto.createHash('md5').update(`${resultSet.takenFrom}-${resultSet.exam.regularReappear}-${resultSet.exam.special}-${resultSet.semYear.num}`).digest('hex');
+            hashMapResultSets[hash] = resultSet;
+        }
+
+        for (let resultSet of Object.values(hashMapResultSets)) {
             const isRegular = resultSet.exam.regularReappear == 'regular' && !resultSet.exam.special;
             const semResult: ResponseSemesterResult = {
                 exam: {
@@ -142,7 +152,7 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
             }
         }
 
-        for(let result of results){
+        for (let result of results) {
             result.collegeRank = ranksMap[result.fileId] && ranksMap[result.fileId].collegeRank
             result.universityRank = ranksMap[result.fileId] && ranksMap[result.fileId].universityRank
         }
