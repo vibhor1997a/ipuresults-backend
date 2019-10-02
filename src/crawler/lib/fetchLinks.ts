@@ -18,15 +18,23 @@ export async function fetchLinks(event, context: Context): Promise<APIGatewayPro
     context.callbackWaitsForEmptyEventLoop = false;
     try {
         conn = await connectToDB(conn);
-        let ResultFile: Model<ResultFile> = conn.model('ResultFile');
-        console.log('fetching links')
-        let resultFiles = await getResultFiles(process.env.START_URL, ResultFile);
-        console.log('fetched links')
-        try {
-            await ResultFile.insertMany(resultFiles, { ordered: false });
-        }
-        catch (err) {
-            console.log(err);
+        const ResultFile: Model<ResultFile> = conn.model('ResultFile');
+        const files = await ResultFile.find({}, { link: 1 });
+        const currentLinks = files.map(files => files.link);
+        const linkSet = new Set(currentLinks);
+        console.log('fetching links');
+        let resultFiles = await getResultFiles(process.env.START_URL, ResultFile, linkSet);
+        console.log('fetched links');
+        if (resultFiles.length > 0) {
+            try {
+                console.log('inserting links');
+
+                await ResultFile.insertMany(resultFiles, { ordered: false });
+                console.log('inserted links');
+            }
+            catch (err) {
+                console.log(err);
+            }
         }
         return APIResponse({ message: "Links Fetched into db" });
     }
@@ -42,7 +50,7 @@ export async function fetchLinks(event, context: Context): Promise<APIGatewayPro
  * @param ResultFile 
  * @param resultFiles 
  */
-function getResultFiles(reqLink, ResultFile: Model<ResultFile>, resultFiles?: ResultFile[]): Promise<ResultFile[]> {
+function getResultFiles(reqLink, ResultFile: Model<ResultFile>, linkSet: Set<string>, resultFiles?: ResultFile[]): Promise<ResultFile[]> {
     resultFiles = resultFiles || [];
     return new Promise((res, rej) => {
         request.get(reqLink, (err, response, body) => {
@@ -61,12 +69,14 @@ function getResultFiles(reqLink, ResultFile: Model<ResultFile>, resultFiles?: Re
                         link,
                         linkText
                     });
-                    resultFiles.push(resultFile);
+                    if (!linkSet.has(resultFile.link)) {
+                        resultFiles.push(resultFile);
+                    }
                 });
                 let $prevPage = $('tr>td>strong>a');
                 if ($prevPage.length > 0) {
                     let prevPageLink = url.resolve(reqLink, $prevPage.attr('href'));
-                    res(getResultFiles(prevPageLink, ResultFile, resultFiles));
+                    res(getResultFiles(prevPageLink, ResultFile, linkSet, resultFiles));
                 }
                 else {
                     res(resultFiles);

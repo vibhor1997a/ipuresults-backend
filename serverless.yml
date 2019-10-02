@@ -34,6 +34,7 @@ functions:
     handler: handler.fetchLinks
     events:
       - schedule: rate(5 minutes)
+    timeout: 10
   downloadPdf:
     handler: handler.downloadPdf
     memorySize: 1728
