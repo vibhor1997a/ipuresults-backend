@@ -45,7 +45,7 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
             });
         }
         const institution = await InstitutionModel.findOne({ code: institutionCode });
-        const programme = await ProgrammeModel.findOne({ code: programmeCode });
+        const programme = await ProgrammeModel.findOne({ code: student.programmeCode });
         const resultSets = await ResultSetModel.find({
             rollNumber,
             programmeCode,

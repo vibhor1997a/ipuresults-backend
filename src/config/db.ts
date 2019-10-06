@@ -18,7 +18,7 @@ export async function connectToDB(conn: mongoose.Connection) {
         conn = await mongoose.createConnection(dbURI, {
             bufferCommands: false,
             bufferMaxEntries: 0,
-            useNewUrlParser: true,
+            useNewUrlParser: true
         });
         console.log('Connected to Db!');
         conn.model('ResultFile', resultFileSchema);
