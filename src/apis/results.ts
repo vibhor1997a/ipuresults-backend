@@ -37,7 +37,7 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
             });
         }
         const [institutionCode, programmeCode] = [rollNumberMatchArr[1], rollNumberMatchArr[2]];
-        const student = await StudentModel.findOne({ rollNumber, programmeCode, institutionCode });
+        const student = await StudentModel.findOne({ rollNumber });
         if (!student) {
             return APIResponse({
                 statusCode: 404,
