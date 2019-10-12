@@ -32,7 +32,7 @@ export function APIResponse(options?: APIResponseFactoryOptions): APIGatewayProx
         'Access-Control-Allow-Methods': '*',
         'Access-Control-Allow-Headers': '*',
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://www.ipuresults.xyz'
+        'Access-Control-Allow-Origin': process.env.FRONTEND_ORIGIN
     };
     return {
         statusCode: options.statusCode || defaultStatusCode,

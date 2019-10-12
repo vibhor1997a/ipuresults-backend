@@ -12,6 +12,7 @@ provider:
   name: aws
   runtime: nodejs10.x
   region: ap-south-1
+  profile: ${self:custom.env.AWS_PROFILE}
   iamManagedPolicies:
     - 'arn:aws:iam::aws:policy/AmazonS3FullAccess'
     - 'arn:aws:iam::aws:policy/AWSLambdaFullAccess'
@@ -28,6 +29,7 @@ provider:
     PARSE_PER_MINUTE: ${self:custom.env.PARSE_PER_MINUTE}
     RANK_PER_MINUTE: ${self:custom.env.RANK_PER_MINUTE}
     ARN_PREFIX: ${self:custom.env.ARN_PREFIX}
+    FRONTEND_ORIGIN: ${self:custom.env.FRONTEND_ORIGIN}
 
 functions:
   fetchLinks:
