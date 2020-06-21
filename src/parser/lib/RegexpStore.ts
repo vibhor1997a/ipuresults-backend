@@ -6,7 +6,7 @@ export const RegexpStore = {
     institution: /institution.+:\s?(\d+) .+:\s?(.+)/i,
     pageNumber: /page no\.:\s?(\d+)/i,
     students: /(\d{11,11})\s(.+)\s(?:\S+ (\d+))\s(?:\S+ (\d+))\s+((?:\S+?\(.+\)\s+\S+\s+\S+\s+\S+\*?(?:\(.+\))?\s+)+)(\S+)/g,
-    students2: /(\d{11,11})\n(.+)\n(?:\S+ (\d+))\s(?:\S+ (\d+))\n.+\n(.+)\n((?:(?!\d{11,11}).+\n.+\n.+\n.+\n.+\n)+)/g,
+    students2: /((?:\S{4,4}\d{3,3}\n.+\n.+\n.+\n.+\n)+)(\d{11,11})\n(.+)\n(?:\S+ (\d+))\s(?:\S+ (\d+))\n.+\n(.+)\n/g,
     paperId: /(\S+)\((.+)\)/,
     numCredits:/\((.+)\)/,
     totalMarks: /(\d+)\*? ?\((.+)\)/,

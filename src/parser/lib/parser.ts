@@ -160,31 +160,38 @@ function parseResultPage(content: string): ParsedResultPage {
 
 
 function parseResultPage2(content: string): ParsedResultPage {
-    content = content.replace(/\*: Passed with grace marks; ABS: Absent; CAN: Cancelled: RL: Result Later; DET: Detained; CS: Credit Secured; EU: Examination Unit Number; SID: Student ID; SchemeID: The Scheme applicable to the Printed On: 19-Jun-2020 /i, '');
+    const pageNumber = parsePageNumber(content);
+    content = content.replace(/\*: Passed with grace marks; ABS: Absent; CAN: Cancelled: RL: Result Later; DET: Detained; CS: Credit Secured; EU: Examination Unit Number; SID: Student ID; SchemeID: The Scheme applicable to the Printed On: (.+) Page No.: (\d+)/i, '');
+    content = content.replace(/Paper Code \(Credit\*\*\*\)/, '');
+    content = content.replace(/Internal/, '');
+    content = content.replace(/Total \(Grade\*\*\)/, '');
+    content = content.replace(/LEGEND/, '');
+    content = content.replace(/\*\* If Grade Based/, '');
+    content = content.replace(/\*\*\* If Credit Based/, '');
+    content = content.trim();
     const declaredDate = parseDeclaredDate(content);
     const preparedDate = parsePreparedDate(content);
     const institution = parseInstitution(content);
-    const pageNumber = parsePageNumber(content);
     content = content.replace(RegexpStore.pageNumber, '');
     const { batch, examination, semYear, programme } = parseResultProgramme(content);
     let studentsMatch: RegExpMatchArray;
     const students: Student[] = [];
     const results: ResultSet[] = [];
     while (studentsMatch = RegexpStore.students2.exec(content)) {
-        const rollNumber = studentsMatch[1];
-        const schemeId = studentsMatch[4];
-        const studentId = studentsMatch[3]
+        const rollNumber = studentsMatch[2];
+        const schemeId = studentsMatch[5];
+        const studentId = studentsMatch[4]
         const student: Student = {
             batch,
             institutionCode: institution.code,
             programmeCode: programme.code,
-            name: studentsMatch[2],
+            name: studentsMatch[3],
             rollNumber,
             schemeId,
             studentId
         }
         const subjectResults: SubjectResult[] = [];
-        const marksMatch = studentsMatch[6];
+        const marksMatch = studentsMatch[1];
         const marksSplitArr = marksMatch.trim().split(/\r?\n/);
         for (let i = 0; i < marksSplitArr.length; i += 5) {
             let [paperCode, creditsStr, minorStr, totalMarksStr, majorStr] = [marksSplitArr[i], marksSplitArr[i + 1], marksSplitArr[i + 2], marksSplitArr[i + 3], marksSplitArr[i + 4]];
@@ -211,7 +218,7 @@ function parseResultPage2(content: string): ParsedResultPage {
             exam: examination,
             semYear,
             studentId,
-            totalCredits: Number(studentsMatch[5]),
+            totalCredits: Number(studentsMatch[6]),
             subjects: subjectResults,
             pageNumber
         }
