@@ -35,7 +35,7 @@ functions:
   fetchLinks:
     handler: handler.fetchLinks
     events:
-      - schedule: rate(5 minutes)
+      - schedule: rate(30 minutes)
     timeout: 10
   downloadPdf:
     handler: handler.downloadPdf
