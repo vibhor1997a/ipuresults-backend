@@ -4,7 +4,7 @@ import { Student, StudentModel } from "./student";
 import { Types, Document, Model } from "mongoose";
 import { Subject, SubjectModel } from "./subject";
 
-export type ResultPageType = 'result' | 'scheme' | 'invalid';
+export type ResultPageType = 'result' | 'scheme' | 'result2' | 'invalid';
 export type SpecialMarks = 'A' | 'CS' | 'D' | 'C' | 'RL' | 'AP';
 
 export interface Marks {
@@ -22,6 +22,10 @@ export interface SubjectMap {
     [schemeId: string]: {
         [paperId: string]: Subject
     }
+}
+
+export interface PaperCodePaperIdMap {
+    [paperCode: string]: string;
 }
 
 export interface InstitutionMap {

@@ -59,7 +59,7 @@ function getResultFiles(reqLink, ResultFile: Model<ResultFile>, linkSet: Set<str
             }
             else {
                 let $ = cheerio.load(body);
-                $('tr>td>a').each((i, el) => {
+                $('tr>td a').each((i, el) => {
                     let $el = $(el);
                     let link = $el.attr('href');
                     let linkText = $el.text().trim() || "";
