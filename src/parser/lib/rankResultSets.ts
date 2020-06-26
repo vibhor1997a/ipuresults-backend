@@ -28,47 +28,61 @@ export async function rankResultSets(event, context: Context): Promise<APIGatewa
         const ResultSetModel: Model<ResultSetModel> = conn.model('ResultSet');
         console.log(`ranking ${fileId}`);
         let scores = await aggregateSemesterScores({ ResultSetModel, takenFrom: new ObjectId(fileId) });
-        let universityRank = 1, prevMarks;
         let SemesterRankModel: Model<SemesterRank> = conn.model('SemesterRank');
         let semesterRanks: SemesterRank[] = [];
-        let institutionNameScoresMap: {
-            [institutionName: string]: any[]
+        let batchScoresMap: {
+            [batch: string]: any[]
         } = {};
-        for (let i = 0; i < scores.length; i++) {
-            let score = scores[i];
-            if (i != 0 && prevMarks != score.marks) {
-                universityRank++;
+        for (let score of scores) {
+            let batch = '20' + score.rollNumber.match(/\d{9,9}(\d{2,2})/)[1];
+            if (!batchScoresMap[batch]) {
+                batchScoresMap[batch] = [];
             }
-            prevMarks = score.marks;
-            score.universityRank = universityRank;
-            if (!institutionNameScoresMap[score.institution.name]) {
-                institutionNameScoresMap[score.institution.name] = [];
+            batchScoresMap[batch].push(score);
+        }
+        for (let batch of Object.keys(batchScoresMap)) {
+            let batchScores = batchScoresMap[batch];
+            let universityRank = 1, prevMarks;
+            let institutionNameScoresMap: {
+                [institutionName: string]: any[]
+            } = {};
+            for (let i = 0; i < batchScores.length; i++) {
+                let batchScore = batchScores[i];
+                if (i != 0 && prevMarks != batchScore.marks) {
+                    universityRank++;
+                }
+                prevMarks = batchScore.marks;
+                batchScore.universityRank = universityRank;
+                if (!institutionNameScoresMap[batchScore.institution.name]) {
+                    institutionNameScoresMap[batchScore.institution.name] = [];
+                }
+                institutionNameScoresMap[batchScore.institution.name].push(batchScore);
             }
-            institutionNameScoresMap[score.institution.name].push(score);
+            for (let institutionName of Object.keys(institutionNameScoresMap)) {
+                let institutionScores = institutionNameScoresMap[institutionName];
+                institutionScores.sort((a, b) => b.marks - a.marks);
+                prevMarks = undefined
+                let collegeRank = 1;
+                for (let i = 0; i < institutionScores.length; i++) {
+                    let institutionScore = institutionScores[i];
+                    if (i != 0 && prevMarks != institutionScore.marks) {
+                        collegeRank++;
+                    }
+                    prevMarks = institutionScore.marks;
+                    semesterRanks.push(new SemesterRankModel({
+                        rollNumber: institutionScore.rollNumber,
+                        marks: institutionScore.marks,
+                        takenFrom: institutionScore.takenFrom,
+                        name: institutionScore.name,
+                        institution: institutionScore.institution,
+                        universityRank: institutionScore.universityRank,
+                        collegeRank,
+                        batch
+                    }));
+                }
+            }
         }
 
-        for (let institutionName of Object.keys(institutionNameScoresMap)) {
-            let institutionScores = institutionNameScoresMap[institutionName];
-            institutionScores.sort((a, b) => b.marks - a.marks);
-            prevMarks = undefined
-            let collegeRank = 1;
-            for (let i = 0; i < institutionScores.length; i++) {
-                let institutionScore = institutionScores[i];
-                if (i != 0 && prevMarks != institutionScore.marks) {
-                    collegeRank++;
-                }
-                prevMarks = institutionScore.marks;
-                semesterRanks.push(new SemesterRankModel({
-                    rollNumber: institutionScore.rollNumber,
-                    marks: institutionScore.marks,
-                    takenFrom: institutionScore.takenFrom,
-                    name: institutionScore.name,
-                    institution: institutionScore.institution,
-                    universityRank: institutionScore.universityRank,
-                    collegeRank
-                }));
-            }
-        }
         try {
             await bulkInsertAll(semesterRanks, SemesterRankModel);
         }

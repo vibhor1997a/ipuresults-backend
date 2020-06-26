@@ -39,5 +39,8 @@ export const semesterRankSchema = new Schema({
     universityRank: {
         type: Number,
         required: true
+    },
+    batch: {
+        type: String
     }
 });

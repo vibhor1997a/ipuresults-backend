@@ -12,5 +12,6 @@ export interface SemesterRank extends Document {
     rollNumber: string;
     takenFrom: Types.ObjectId;
     collegeRank: number;
-    universityRank:number
+    universityRank: number
+    batch: string;
 }

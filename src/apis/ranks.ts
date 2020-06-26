@@ -19,6 +19,7 @@ export async function getRanks(event: APIGatewayEvent, context: Context): Promis
         conn = await connectToDB(conn);
         const rankType: 'institution' | 'university' = event.pathParameters['type'] as any;
         const takenFrom: string = event.queryStringParameters['fileId'];
+        const batch: string = event.queryStringParameters['batch'];
         const institutionCode: string = event.queryStringParameters['institutionCode'];
         const limit: number = Number(event.queryStringParameters['limit']) || 20;
         if (limit > 50) {
@@ -31,7 +32,8 @@ export async function getRanks(event: APIGatewayEvent, context: Context): Promis
         let institutionCodes: string[];
         const SemesterRankModel: Model<SemesterRank> = conn.model('SemesterRank');
         let query: any = {
-            takenFrom: new ObjectId(takenFrom)
+            takenFrom: new ObjectId(takenFrom),
+            batch
         };
         let sortFactor: any = { universityRank: 1 };
         if (rankType == 'institution') {
