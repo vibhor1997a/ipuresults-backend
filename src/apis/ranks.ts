@@ -33,7 +33,14 @@ export async function getRanks(event: APIGatewayEvent, context: Context): Promis
         const SemesterRankModel: Model<SemesterRank> = conn.model('SemesterRank');
         let query: any = {
             takenFrom: new ObjectId(takenFrom),
-            batch
+            "$or": [
+                {
+                    batch
+                },
+                {
+                    batch: null
+                }
+            ]
         };
         let sortFactor: any = { universityRank: 1 };
         if (rankType == 'institution') {
