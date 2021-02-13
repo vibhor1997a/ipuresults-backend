@@ -56,7 +56,7 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
         });
         let subjectIds = [];
         for (let resultSet of resultSets) {
-            subjectIds = subjectIds.concat(resultSet.subjects.map(subject => subject.paperId));
+            subjectIds = subjectIds.concat(resultSet.subjects.map(subject => Number(subject.paperId) + ''));
         }
         const subjects = await SubjectModel.find({ paperId: { $in: subjectIds }, schemeId: student.schemeId });
         let paperIdSubjectMap: {
@@ -99,7 +99,7 @@ export async function getResult(event: APIGatewayEvent, context: Context): Promi
             rankPromises.push(getRank(SemesterRankModel, rollNumber, resultSet.takenFrom));
             let totalSemMarks = 0, maxSemMarks = 0, totalSemCreditMarks = 0, maxSemCreditMarks = 0, maxSemCredits = 0;
             for (let subjectResult of resultSet.subjects) {
-                let subject = paperIdSubjectMap[subjectResult.paperId];
+                let subject = paperIdSubjectMap[Number(subjectResult.paperId) + ''];
                 let isPassed = subjectResult.totalMarks.score >= subject.passMarks;
                 semResult.subjects.push({
                     name: subject.name,
