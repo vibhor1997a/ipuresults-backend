@@ -12,7 +12,7 @@
     "cheerio": "^1.0.0-rc.3",
     "dotenv": "^8.1.0",
     "moment": "^2.24.0",
-    "mongoose": "^5.6.13",
+    "mongoose": "^5.7.5",
     "request": "^2.88.0",
     "saslprep": "^1.0.3",
     "source-map-support": "^0.5.10"
