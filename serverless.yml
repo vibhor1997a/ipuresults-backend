@@ -30,6 +30,8 @@ provider:
     RANK_PER_MINUTE: ${self:custom.env.RANK_PER_MINUTE}
     ARN_PREFIX: ${self:custom.env.ARN_PREFIX}
     FRONTEND_ORIGIN: ${self:custom.env.FRONTEND_ORIGIN}
+    SOCKET_TIMEOUT: ${self:custom.env.SOCKET_TIMEOUT}
+    CONNECTION_TIMEOUT: ${self:custom.env.CONNECTION_TIMEOUT}
 
 functions:
   fetchLinks:

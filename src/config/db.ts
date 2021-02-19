@@ -7,6 +7,8 @@ import { resultSetSchema } from '../schemas/resultSet';
 import { subjectSchema } from '../schemas/subject';
 import { semesterRankSchema } from '../schemas/semesterRank';
 
+
+
 /**
  * Make connection to db if required
  * @param conn 
@@ -18,7 +20,9 @@ export async function connectToDB(conn: mongoose.Connection) {
         conn = await mongoose.createConnection(dbURI, {
             bufferCommands: false,
             bufferMaxEntries: 0,
-            useNewUrlParser: true
+            useNewUrlParser: true,
+            connectTimeoutMS: Number(process.env.CONNECTION_TIMEOUT) || 0,
+            socketTimeoutMS: Number(process.env.SOCKET_TIMEOUT) || 0
         });
         console.log('Connected to Db!');
         conn.model('ResultFile', resultFileSchema);
